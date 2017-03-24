@@ -1,0 +1,1 @@
+hawkular_client==0.5.2

@@ -1,6 +1,6 @@
-from hawkular.metrics import HawkularMetricsClient, MetricType, HawkularMetricsError
+from hawkular.metrics import HawkularMetricsClient, MetricType, HawkularMetricsError, HawkularMetricsConnectionError
 
-import json, sys, ssl, urllib2
+import json, sys, ssl, urllib2, time
 from datetime import datetime, timedelta
 
 epoch = datetime.utcfromtimestamp(0)
@@ -81,17 +81,25 @@ def metric_data_by_pod(pods):
             print 'Progress {}% ({}/{})'.format(percent_completed, counter, total)
 
         for m in metrics:
-            try:
-                now = datetime.utcnow()
-                end = unix_time_millis(now - timedelta(minutes=30))
-                start = unix_time_millis(now - timedelta(minutes=61))
+            now = datetime.utcnow()
+            end = unix_time_millis(now - timedelta(minutes=30))
+            start = unix_time_millis(now - timedelta(minutes=46))
 
-                data = client.query_metric(to_type(m['type']), urllib2.quote(m['id']), start=start, end=end)
-                m['data_count'] = len(data)
-            except HawkularMetricsError:
+            try:
+                timer_start = time.time()
+                data = client.query_metric(to_type(m['type']),
+                                           urllib2.quote(m['id']),
+                                           start=start,
+                                           end=end),
+                timer_end = time.time()
+
+                m['data_count'] = len(data[0])
+                m['time_lapse'] = timer_end - timer_start
+            except (HawkularMetricsError, HawkularMetricsConnectionError) as e:
                 e = sys.exc_info()[1]
                 print e
                 m['data_count'] = -1
+                m['time_lapse'] = time.time() - timer_start
     return pods
 
 

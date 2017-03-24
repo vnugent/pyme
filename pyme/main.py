@@ -1,18 +1,35 @@
 from hawkular.metrics import HawkularMetricsClient, MetricType, HawkularMetricsError
 
-import json, sys, urllib
+import json, sys, ssl, urllib2
 from datetime import datetime, timedelta
 
 epoch = datetime.utcfromtimestamp(0)
 
-host = 'hawkular-services-openshift-infra.origin.cloud1.hawkular.org'
+#host = 'hawkular-services-openshift-infra.origin.cloud1.hawkular.org'
+host= 'hawkular-metrics-openshift-infra.cloud2.jonqe.lab.eng.bos.redhat.com'
 path = 'hawkular/metrics'
 port = '443'
 username = 'hawkular'
-password = 'gGmfVlFB0tfby_r'
+#os1
+#password = 'gGmfVlFB0tfby_r'
+#cluster2
+password = 'kw35ccAXWLi5hTC'
 tenant_id='promgen'
 
-client = HawkularMetricsClient(username=username, password=password, tenant_id=tenant_id, scheme='https', host=host, path=path, port=port)
+
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
+
+client = HawkularMetricsClient(username=username,
+                               password=password,
+                               tenant_id=tenant_id,
+                               scheme='https',
+                               host=host,
+                               path=path,
+                               port=port,
+                               context=ctx)
+
 defs = client.query_metric_definitions(custom_metric='true')
 
 TypeMap = {
@@ -53,16 +70,23 @@ def metric_definitions_by_pod():
 
 
 def metric_data_by_pod(pods):
+    counter = 0
+    total = len(pods.items())
+    percent_completed = 0
     for key, value in pods.items():
         metrics = value['metrics']
+        counter += 1
+        percent_completed = int(round((counter / float(total)) * 100))
+        if percent_completed % 10 == 0:
+            print 'Progress {}% ({}/{})'.format(percent_completed, counter, total)
+
         for m in metrics:
             try:
                 now = datetime.utcnow()
-                #start = unix_time_millis(now - timedelta(minutes=61))
-                end = unix_time_millis(now - timedelta(minutes=1))
-                start = unix_time_millis(now - timedelta(minutes=31))
+                end = unix_time_millis(now - timedelta(minutes=30))
+                start = unix_time_millis(now - timedelta(minutes=61))
 
-                data = client.query_metric(to_type(m['type']), urllib.quote_plus(m['id']), start=start, end=end)
+                data = client.query_metric(to_type(m['type']), urllib2.quote(m['id']), start=start, end=end)
                 m['data_count'] = len(data)
             except HawkularMetricsError:
                 e = sys.exc_info()[1]

@@ -1,18 +1,17 @@
 from hawkular.metrics import HawkularMetricsClient, MetricType, HawkularMetricsError, HawkularMetricsConnectionError
 
-import json, sys, ssl, urllib2, time
+import json
+import sys
+import ssl
+import urllib2
+import time
 from datetime import datetime, timedelta
 
-epoch = datetime.utcfromtimestamp(0)
 
-#host = 'hawkular-services-openshift-infra.origin.cloud1.hawkular.org'
 host= 'hawkular-metrics-openshift-infra.cloud2.jonqe.lab.eng.bos.redhat.com'
 path = 'hawkular/metrics'
 port = '443'
 username = 'hawkular'
-#os1
-#password = 'gGmfVlFB0tfby_r'
-#cluster2
 password = 'kw35ccAXWLi5hTC'
 tenant_id='promgen'
 
@@ -41,10 +40,6 @@ TypeMap = {
 
 def to_type(short_type):
     return TypeMap.get(short_type, short_type)
-
-
-def unix_time_millis(dt):
-    return '{:.0f}'.format((dt - epoch).total_seconds() * 1000)
 
 
 def metric_definitions_by_pod():
@@ -81,9 +76,8 @@ def metric_data_by_pod(pods):
             print 'Progress {}% ({}/{})'.format(percent_completed, counter, total)
 
         for m in metrics:
-            now = datetime.utcnow()
-            end = unix_time_millis(now - timedelta(minutes=30))
-            start = unix_time_millis(now - timedelta(minutes=46))
+            end = datetime(2017, 03, 28, 02, 00, 00)
+            start = end - timedelta(minutes=30)
 
             try:
                 timer_start = time.time()

@@ -1,1 +1,1 @@
-hawkular_client==0.5.2
+hawkular_client==0.5.3

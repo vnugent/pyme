@@ -42,6 +42,21 @@ def to_type(short_type):
     return TypeMap.get(short_type, short_type)
 
 
+def get_flat_metric_definitions():
+    results = []
+    for item in defs:
+        entry = {
+            'id': item['id'],
+            'type': item['type'],
+            'tags': {
+                'pod_name': item['tags']['pod_name'],
+                'pod_namespace': item['tags']['pod_namespace'],
+            }
+        }
+        results.append(entry)
+    return results
+
+
 def metric_definitions_by_pod():
     pods = {}
     counter = 0
